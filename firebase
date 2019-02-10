@@ -1,0 +1,186 @@
+package com.teste.lucasdesouza.treinamentoapp;
+
+import android.opengl.Visibility;
+import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseError;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.PhoneAuthCredential;
+import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import net.rimoto.intlphoneinput.IntlPhoneInput;
+
+import java.util.concurrent.TimeUnit;
+
+public class Telasms extends AppCompatActivity {
+    private Button btnAvancar, btnEviarCodigo;
+    private EditText edtCodigo;
+    private IntlPhoneInput edtNumCel;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseAuth.AuthStateListener authStateListener;
+    private String verificationCode;
+    private ConstraintLayout layoutNum, layoutVeri;
+    private TextView textViewerrado,teste1,teste;
+    private String asd;
+
+
+    private DatabaseReference firebaseRef;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_telasms);
+        btnAvancar = findViewById(R.id.button8);
+        btnEviarCodigo = findViewById(R.id.button9);
+        edtCodigo = findViewById(R.id.editText);
+        edtNumCel = findViewById(R.id.my_phone_input);
+        firebaseAuth = FirebaseAuth.getInstance();
+        layoutNum = findViewById(R.id.constraintLayoutNum);
+        layoutVeri = findViewById(R.id.constraintLayoutVeri);
+        textViewerrado = findViewById(R.id.textViewerrado);
+        teste = findViewById(R.id.teste);
+        teste1= findViewById(R.id.teste2);
+
+        textViewerrado.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                layoutNum.setVisibility(View.VISIBLE);
+                layoutVeri.setVisibility(View.GONE);
+            }
+        });
+
+
+
+        btnAvancar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String phoneNumber;
+                if(edtNumCel.isValid()){
+                    phoneNumber = edtNumCel.getNumber();
+
+                    PhoneAuthProvider.getInstance().verifyPhoneNumber(phoneNumber, 60, TimeUnit.SECONDS, Telasms.this, new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                        @Override
+                        public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
+                            signInWithPhoneAuthCredential(phoneAuthCredential);
+                        }
+
+                        @Override
+                        public void onVerificationFailed(FirebaseException e) {
+                            edtNumCel.hideKeyboard();
+                            Toast.makeText(Telasms.this, "veridicação falhou",Toast.LENGTH_LONG).show();
+
+
+                        }
+                        @Override
+                        public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken){
+                            super.onCodeSent(s, forceResendingToken);
+                            verificationCode = s;
+                            edtNumCel.hideKeyboard();
+                            layoutNum.setVisibility(View.GONE);
+                            layoutVeri.setVisibility(View.VISIBLE);
+                        }
+                        @Override
+                        public void onCodeAutoRetrievalTimeOut(String s){
+                            super.onCodeAutoRetrievalTimeOut(s);
+                            Toast.makeText(Telasms.this, "verificacaoExcedeu",Toast.LENGTH_LONG).show();
+                        }
+
+
+                    });
+
+
+
+                }else{
+                    Toast.makeText(Telasms.this,"numero errado",Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        btnEviarCodigo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String code = edtCodigo.getText().toString();
+                if (!code.isEmpty()){
+                    signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(verificationCode,code));
+                }
+            }
+        });
+
+
+
+    }
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                       
+                      ======================= ============================================================================
+                       if (task.isSuccessful()) {
+
+
+                            layoutNum.setVisibility(View.GONE);
+                            layoutVeri.setVisibility(View.GONE);
+                            asd = task.getResult().getUser().getUid().toString();
+                            DatabaseReference firebaseReff;
+
+                            DatabaseReference useRef = firebaseReff.child("usuarios");
+                            useRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot snapshot) {
+                                    if(snapshot.hasChild(asd)){
+                                        // run some code
+
+                                    }else{
+
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+===================================================================================================================
+
+                            // Sign in success, update UI with the signed-in user's information
+
+
+                            Toast.makeText(Telasms.this,"sucesso",Toast.LENGTH_LONG).show();
+                            // ...
+                        } else {
+                            // Sign in failed, display a message and update the UI
+
+                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
+                                // The verification code entered was invalid
+                                Toast.makeText(Telasms.this,"codigoerrado",Toast.LENGTH_LONG).show();
+
+                            }else{
+                                Toast.makeText(Telasms.this,"erro",Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                });
+    }
+}
