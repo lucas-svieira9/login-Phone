@@ -135,17 +135,14 @@ public class Telasms extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                       
-                      ======================= ============================================================================
-                       if (task.isSuccessful()) {
+                        if (task.isSuccessful()) {
 
 
                             layoutNum.setVisibility(View.GONE);
                             layoutVeri.setVisibility(View.GONE);
                             asd = task.getResult().getUser().getUid().toString();
-                            DatabaseReference firebaseReff;
 
-                            DatabaseReference useRef = firebaseReff.child("usuarios");
+                            DatabaseReference useRef = firebaseRef.child("usuarios");
                             useRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot snapshot) {
@@ -159,10 +156,10 @@ public class Telasms extends AppCompatActivity {
 
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                                    
                                 }
                             });
-===================================================================================================================
+
 
                             // Sign in success, update UI with the signed-in user's information
 
